@@ -18,6 +18,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",
       "https://ecombackend-production-b7eb.up.railway.app",
       "https://ecom-frontend-taupe-six.vercel.app" // ✅ new frontend URL
     ],
