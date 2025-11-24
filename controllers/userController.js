@@ -4,50 +4,52 @@ import jwt from "jsonwebtoken";
 import cloudinary from "../config/cloudinary.js";
 import crypto from "crypto";
 import senderVerificationEmail from "../utils/senderVerificationEmail.js";
-
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // Required fields check
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // User already exists check
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 1. Ek unique token banayein
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
+    // Create user
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
-      verificationToken: verificationToken, // Token ko user ke saath save karein
     });
 
     await newUser.save();
 
-    // 2. User ko verification email bhejein
-    const verificationUrl = `http://localhost:5173/verify-email/${verificationToken}`; // Apne domain aur port ke hisab se change karein
-    await senderVerificationEmail(newUser.email, verificationUrl);
-
-    res.status(201).json({
-      message:
-        "User registered successfully. Please check your email to verify your account.",
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+      },
     });
+
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error registering user", error: error.message });
+    console.error("Register Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
-
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
