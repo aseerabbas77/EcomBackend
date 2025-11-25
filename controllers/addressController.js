@@ -24,7 +24,9 @@ export const createAddress = async (req, res) => {
 export const getAddresses = async (req, res) => {
   try {
     const userId = req.user.id;
-    const addresses = await Address.find({ user: userId });
+    const addresses = await Address.find({ user: userId }).sort({
+      createdAt: -1,
+    });
     res.status(200).json({ success: true, addresses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
